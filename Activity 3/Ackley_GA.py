@@ -5,9 +5,8 @@ import math
 import random
 import functools
 import numpy as np
-from typing import List
 #Chromosomes are 4 bits long
-L_chromosome=4  #4
+L_chromosome=10  #4
 N_chains=2**L_chromosome
 #Lower and upper limits of search space
 a=-20
@@ -40,7 +39,7 @@ for i in range(0,N_chromosomes):
     fitness_values.append(0)
 
 #binary codification
-def decode_chromosome(chromosome: List[int]):
+def decode_chromosome(chromosome):
     global L_chromosome,N_chains,a,b
     value=0
     for p in range(L_chromosome):
@@ -50,29 +49,15 @@ def decode_chromosome(chromosome: List[int]):
 
 
 #Original function
-# def f(x):
-#     return 0.05*x*x-4*math.cos(x)
+def f(x):
+    return 0.05*x*x-4*math.cos(x)
 
-# def f(x):
-#     """Rastrigin Function"""
-#     d = 1 #dimension
-#     return 10*d + (x**2 - 10 * math.cos( 2 * math.pi * x ))
+#def f(x):
+#    """Rastrigin Function"""
+#    d = 1 #dimension
+#    return 10*d + (x**2 - 10 * math.cos( 2 * math.pi * x ))
 
 
-def divCromo(c: List[int]) -> List[List[int] and List[int]]:
-    """Divide en dos partes un cromosoma tomando en cuenta crossover_point
-    Regresa una lista con la parte izq y der"""
-    global crossover_point
-    return [c[0:crossover_point], c[crossover_point:]]
-
-def f(c):
-    firstSum = 0.0
-    secondSum = 0.0
-    for c1 in c:
-        firstSum += c1**2.0
-        secondSum += math.cos(2.0*math.pi*c1)
-    n = 2# = float(len(chromosome))
-    return -20.0*math.exp(-0.2*math.sqrt(firstSum/n)) - math.exp(secondSum/n) + 20 + math.e
 
 # def f(c):
 #     firstSum = 0.0
@@ -87,20 +72,15 @@ def f(c):
 
 def evaluate_chromosomes():
     global F0
+
     for p in range(N_chromosomes):
-        aux = divCromo(F0[p])
-        v = [decode_chromosome(parteC) for parteC in aux]
+        v=decode_chromosome(F0[p])
         fitness_values[p]=f(v)
 
 
 def compare_chromosomes(chromosome1,chromosome2):
-    #Dividir el cromosoma
-    cd = divCromo(chromosome1)
-    #Decodificar los cromosomas
-    vc1 = [decode_chromosome(parteC) for parteC in cd]
-    #Hacer lo mismo con el cromosoma 2 
-    cd = divCromo(chromosome2)
-    vc2 = [decode_chromosome(parteC) for parteC in cd]
+    vc1=decode_chromosome(chromosome1)
+    vc2=decode_chromosome(chromosome2)
     fvc1=f(vc1)
     fvc2=f(vc2)
     if fvc1 > fvc2:
@@ -146,16 +126,10 @@ F1=F0[:]
 
 def nextgeneration():
     w.delete(ALL)
-    F0.sort(key=functools.cmp_to_key(compare_chromosomes))
+    F0.sort(key=functools.cmp_to_key(compare_chromosomes)) #Ordenar cromosomas por el más valioso
     print( "Best solution so far:" )
-    #Dividir el cromosoma
-    cd = divCromo(F0[0])
-    #Decodificar los cromosomas
-    vc = [decode_chromosome(parteC) for parteC in cd]
-    print("To f(x) f("+str(vc[0])+")= "+
-           str(f(vc) ))
-    print("To f(y) f("+str(vc[1])+")= "+
-           str(f(vc) ))
+    print( "f("+str(decode_chromosome(F0[0]))+")= "+
+           str(f(decode_chromosome(F0[0]))) )
 
     #elitism, the two best chromosomes go directly to the next generation
     F1[0]=F0[0]
@@ -185,13 +159,64 @@ def nextgeneration():
     #The new generation replaces the old one
     F0[:]=F1[:]
 
+
+
+#visualization
+master = Tk()
+
+xmax=400
+ymax=400
+
+xo=200
+yo=200
+
+s=10
+
+w = Canvas(master, width=xmax, height=ymax)
+w.pack()
+
+
+button1 = Button(master, text="Next Generation", command=nextgeneration)
+button1.pack()
+
+N=100
+
+
+def graph_f():
+    xini=-20.
+    xfin=20.
+
+    dx=(xfin-xini)/N
+
+    xold=xini
+    yold=f(xold)
+    for i in range(1,N):
+        xnew=xini+i*dx
+        ynew=f(xnew)
+        w.create_line(xo+xold*s,yo-yold*s,xo+xnew*s,yo-ynew*s)
+        xold=xnew
+        yold=ynew
+
+def graph_population(F,mycanvas,escalax,escalay,xcentro,ycentro,color):
+    for chromosome in F:
+        x=decode_chromosome(chromosome)
+        mycanvas.create_line(xcentro+x*escalax,ycentro-10*escalay,xcentro+x*escalax, ycentro+10*escalay,fill=color)
+
+def numeric_compare(x, y):
+    return x - y
+
+
+
+
+graph_f()
+graph_population(F0,w,s,s,xo,yo,'red')
+print('Esto', F0)
+print('Valor: ', decode_chromosome(F0[0]))
 F0.sort(key=functools.cmp_to_key(compare_chromosomes))
+print('Aquello', F0)
+print('Valor: ', decode_chromosome(F0[0]))
 evaluate_chromosomes()
 
-while(True):
-    nextgeneration()
-    print('Otro? s/n')
-    if input() == 'n':
-        exit()
 
 
+mainloop()
