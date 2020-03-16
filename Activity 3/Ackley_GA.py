@@ -5,6 +5,7 @@ import math
 import random
 import functools
 import numpy as np
+from typing import List, Tuple
 #Chromosomes are 4 bits long
 L_chromosome=10  #4
 N_chains=2**L_chromosome
@@ -32,14 +33,18 @@ N_chromosomes=20
 prob_m=0.75 #0 ->.25
 
 F0=[]
+F = [] #Línea para dar 2D
 fitness_values=[]
+#fitness_values1=[] 
 
 for i in range(0,N_chromosomes):
     F0.append(random_chromosome())
+    F.append(random_chromosome())
     fitness_values.append(0)
 
+
 #binary codification
-def decode_chromosome(chromosome):
+def decode_chromosome(chromosome: List[int]) -> float:
     global L_chromosome,N_chains,a,b
     value=0
     for p in range(L_chromosome):
@@ -49,8 +54,8 @@ def decode_chromosome(chromosome):
 
 
 #Original function
-def f(x):
-    return 0.05*x*x-4*math.cos(x)
+#def f(x):
+#    return 0.05*x*x-4*math.cos(x)
 
 #def f(x):
 #    """Rastrigin Function"""
@@ -59,23 +64,24 @@ def f(x):
 
 
 
-# def f(c):
-#     firstSum = 0.0
-#     secondSum = 0.0
-#     #for c in chromosome:
-#     firstSum += c**2.0
-#     secondSum += math.cos(2.0*math.pi*c)
-#     n = 1# = float(len(chromosome))
-#     return -20.0*math.exp(-0.2*math.sqrt(firstSum/n)) - math.exp(secondSum/n) + 20 + math.e
+def f(chromosome):
+    firstSum = 0.0
+    secondSum = 0.0
+    for c in chromosome:
+        firstSum += c**2.0
+        secondSum += math.cos(2.0*math.pi*c)
+    n = float(len(chromosome))
+    return -20.0*math.exp(-0.2*math.sqrt(firstSum/n)) - math.exp(secondSum/n) + 20 + math.e
 
 
 
 def evaluate_chromosomes():
-    global F0
+    global F0, F
 
     for p in range(N_chromosomes):
         v=decode_chromosome(F0[p])
-        fitness_values[p]=f(v)
+        v1=decode_chromosome(F[p]) #Decodificar la segunda línea
+        fitness_values[p]=f([v,v1]) #Obtener el valor de ajuste de ambas decodificaciones.
 
 
 def compare_chromosomes(chromosome1,chromosome2):
@@ -96,7 +102,7 @@ suma=float(N_chromosomes*(N_chromosomes+1))/2.
 Lwheel=N_chromosomes*10
 
 def create_wheel():
-    global F0,fitness_values
+    global F0,fitness_values, F
 
     maxv=max(fitness_values)
     acc=0
@@ -123,100 +129,104 @@ def create_wheel():
     return wheel
 
 F1=F0[:]
+F3=F[:] #Para la otra lista de cromosomas
+
+
+def compare_chromosomesList(lcromo: Tuple[List[int]], lcromo2: Tuple[List[int]]):
+    """Compara pares de cromosomas en listas"""
+    #Decodificar el par de cromosomas 1 
+    vc01=decode_chromosome(lcromo[0])
+    vc02=decode_chromosome(lcromo[1])
+    #Decodificar el par de cromosomas 2
+    vc11=decode_chromosome(lcromo2[0])
+    vc12=decode_chromosome(lcromo2[1])
+
+    #Evaluarlos
+    fvc1=f([vc01, vc02])
+    fvc2=f([vc11, vc12])
+
+    #Compararlos
+    if fvc1 > fvc2:
+        return 1
+    elif fvc1 == fvc2:
+        return 0
+    else: #fvg1<fvg2
+        return -1
+
+def ordenarValioso() -> List[int] and List[int]:
+    """Ordena pares de cromosomas por los más valiosos"""
+    global F0, F, L_chromosome, N_chromosomes
+    Faux = []
+    #Crear una megalista donde estén las tuplas de los cromosomas que se va evaluar
+    for i in range(0,N_chromosomes):
+        aux = ()
+        aux = (F0[i], F[i])
+        Faux.append(aux)
+    #Ordenarlos por el más valioso
+    Faux.sort(key=functools.cmp_to_key(compare_chromosomesList))
+    #Regresar la tupla de cromosomas más valiosos
+    #return Faux[0][0] and Faux[0][1]
+    return Faux
+
+    
+
 
 def nextgeneration():
-    w.delete(ALL)
-    F0.sort(key=functools.cmp_to_key(compare_chromosomes)) #Ordenar cromosomas por el más valioso
+    #F0.sort(key=functools.cmp_to_key(compare_chromosomes)) #Ordenar cromosomas por el más valioso
+    Faux = ordenarValioso()
     print( "Best solution so far:" )
-    print( "f("+str(decode_chromosome(F0[0]))+")= "+
-           str(f(decode_chromosome(F0[0]))) )
+    print( "f("+str(decode_chromosome(Faux[0][0])) +','+
+    str(decode_chromosome(Faux[0][1]))+")= "+
+    str(f([decode_chromosome(Faux[0][0]), decode_chromosome(Faux[0][1])])) )
 
     #elitism, the two best chromosomes go directly to the next generation
-    F1[0]=F0[0]
-    F1[1]=F0[1]
+    F1 = Faux[0][0]
+    F3 = Faux[0][1]
+    #F1[0]=F0[0]
+    #F1[1]=F0[1]
     for i in range(0,int((N_chromosomes-2)/2)):
         roulette=create_wheel()
         #Two parents are selected
-        p1=random.choice(roulette)
-        p2=random.choice(roulette)
+        p01=random.choice(roulette)
+        p02=random.choice(roulette)
+        p11=random.choice(roulette)
+        p12=random.choice(roulette)
+
         #Two descendants are generated
-        o1=F0[p1][0:crossover_point]
-        o1.extend(F0[p2][crossover_point:L_chromosome])
-        o2=F0[p2][0:crossover_point]
-        o2.extend(F0[p1][crossover_point:L_chromosome])
+        o01=F0[p01][0:crossover_point]
+        o01.extend(F0[p02][crossover_point:L_chromosome])
+        o02=F0[p02][0:crossover_point]
+        o02.extend(F0[p01][crossover_point:L_chromosome])
+
+        o11=F[p11][0:crossover_point]
+        o11.extend(F[p12][crossover_point:L_chromosome])
+        o12=F[p12][0:crossover_point]
+        o12.extend(F[p11][crossover_point:L_chromosome])
+
+        
         #Each descendant is mutated with probability prob_m
         if random.random() < prob_m:
-            o1[int(round(random.random()*(L_chromosome-1)))]^=1
+            o01[int(round(random.random()*(L_chromosome-1)))]^=1
+            o11[int(round(random.random()*(L_chromosome-1)))]^=1
         if random.random() < prob_m:
-            o2[int(round(random.random()*(L_chromosome-1)))]^=1
+            o02[int(round(random.random()*(L_chromosome-1)))]^=1
+            o12[int(round(random.random()*(L_chromosome-1)))]^=1
         #The descendants are added to F1
-        F1[2+2*i]=o1
-        F1[3+2*i]=o2
+        F1[2+2*i]=o01
+        F1[3+2*i]=o02
 
-    graph_f()
-    graph_population(F0,w,s,s,xo,yo,'red')
-    graph_population(F1,w,s,s*0.5,xo,yo,'green')
+        F3[2+2*i]=o11
+        F3[3+2*i]=o12
+
     #The new generation replaces the old one
-    F0[:]=F1[:]
+    F0[:] = F1[:]
+    F[:] = F3[:]  
 
-
-
-#visualization
-master = Tk()
-
-xmax=400
-ymax=400
-
-xo=200
-yo=200
-
-s=10
-
-w = Canvas(master, width=xmax, height=ymax)
-w.pack()
-
-
-button1 = Button(master, text="Next Generation", command=nextgeneration)
-button1.pack()
-
-N=100
-
-
-def graph_f():
-    xini=-20.
-    xfin=20.
-
-    dx=(xfin-xini)/N
-
-    xold=xini
-    yold=f(xold)
-    for i in range(1,N):
-        xnew=xini+i*dx
-        ynew=f(xnew)
-        w.create_line(xo+xold*s,yo-yold*s,xo+xnew*s,yo-ynew*s)
-        xold=xnew
-        yold=ynew
-
-def graph_population(F,mycanvas,escalax,escalay,xcentro,ycentro,color):
-    for chromosome in F:
-        x=decode_chromosome(chromosome)
-        mycanvas.create_line(xcentro+x*escalax,ycentro-10*escalay,xcentro+x*escalax, ycentro+10*escalay,fill=color)
-
-def numeric_compare(x, y):
-    return x - y
-
-
-
-
-graph_f()
-graph_population(F0,w,s,s,xo,yo,'red')
-print('Esto', F0)
-print('Valor: ', decode_chromosome(F0[0]))
-F0.sort(key=functools.cmp_to_key(compare_chromosomes))
-print('Aquello', F0)
-print('Valor: ', decode_chromosome(F0[0]))
+#F0.sort(key=functools.cmp_to_key(compare_chromosomes))
 evaluate_chromosomes()
 
-
-
-mainloop()
+while(True):
+    nextgeneration()
+    print('Otro? s/n')
+    if input() == 'n':
+        exit()
