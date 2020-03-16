@@ -5,8 +5,9 @@ import math
 import random
 import functools
 import numpy as np
-#Chromosomes are 4 bits long
-L_chromosome=10  #4
+from typing import List
+#Chromosomes bits long
+L_chromosome=20  #4
 N_chains=2**L_chromosome
 #Lower and upper limits of search space
 a=-20
@@ -27,7 +28,7 @@ def random_chromosome():
     return chromosome
 
 #Number of chromosomes
-N_chromosomes=20
+N_chromosomes=10
 #probability of mutation
 prob_m=0.75 #0 ->.25
 
@@ -40,17 +41,17 @@ for i in range(0,N_chromosomes):
 
 #binary codification
 def decode_chromosome(chromosome):
-    global L_chromosome,N_chains,a,b
+    global L_chromosome,N_chains,a,b, crossover_point
     value=0
-    for p in range(L_chromosome):
+    for p in range(crossover_point):
         value+=(2**p)*chromosome[-1-p]
 
     return a+(b-a)*float(value)/(N_chains-1) #in Python3, conversion to float is not needed
 
 
 #Original function
-def f(x):
-    return 0.05*x*x-4*math.cos(x)
+#def f(x):
+#    return 0.05*x*x-4*math.cos(x)
 
 #def f(x):
 #    """Rastrigin Function"""
@@ -59,30 +60,41 @@ def f(x):
 
 
 
-# def f(c):
-#     firstSum = 0.0
-#     secondSum = 0.0
-#     #for c in chromosome:
-#     firstSum += c**2.0
-#     secondSum += math.cos(2.0*math.pi*c)
-#     n = 1# = float(len(chromosome))
-#     return -20.0*math.exp(-0.2*math.sqrt(firstSum/n)) - math.exp(secondSum/n) + 20 + math.e
+def f(chromosome: List[float]):
+    """Ackley function"""
+    firstSum = 0.0
+    secondSum = 0.0
+    for c in chromosome:
+        firstSum += c**2.0
+        secondSum += math.cos(2.0*math.pi*c)
+    n = float(len(chromosome))
+    return -20.0*math.exp(-0.2*math.sqrt(firstSum/n)) - math.exp(secondSum/n) + 20 + math.e
 
+
+def diviCR(cromosoma: List[int]) -> List[int] and List[int]:
+    """Divide un cromosoma en su parte X y su parte Y"""
+    global crossover_point
+    return cromosoma[:crossover_point], cromosoma[crossover_point:]
+
+
+def obtenerAckleyCromosoma(cromosoma: List[int]) -> float:
+    """Obtiene el valor decodificado y de Ackley de un cromosoma
+    Tomando en cuenta que este tiene una parte X y una parte Y"""
+    vx, vy = diviCR(cromosoma)
+    vx=decode_chromosome(vx)
+    vy=decode_chromosome(vy)
+    return f([vx, vy])
 
 
 def evaluate_chromosomes():
     global F0
-
     for p in range(N_chromosomes):
-        v=decode_chromosome(F0[p])
-        fitness_values[p]=f(v)
+        fitness_values[p]= obtenerAckleyCromosoma(F0[p])
 
 
 def compare_chromosomes(chromosome1,chromosome2):
-    vc1=decode_chromosome(chromosome1)
-    vc2=decode_chromosome(chromosome2)
-    fvc1=f(vc1)
-    fvc2=f(vc2)
+    fvc1 = obtenerAckleyCromosoma(chromosome1)
+    fvc2 = obtenerAckleyCromosoma(chromosome2)
     if fvc1 > fvc2:
         return 1
     elif fvc1 == fvc2:
@@ -127,8 +139,10 @@ F1=F0[:]
 def nextgeneration():
     F0.sort(key=functools.cmp_to_key(compare_chromosomes)) #Ordenar cromosomas por el más valioso
     print( "Best solution so far:" )
-    print( "f("+str(decode_chromosome(F0[0]))+")= "+
-           str(f(decode_chromosome(F0[0]))) )
+    x, y = diviCR(F0[0])
+    print( "f("+str(decode_chromosome(x))+
+    ","+str(decode_chromosome(y))+") = "+
+    str(obtenerAckleyCromosoma(F0[0])))
 
     #elitism, the two best chromosomes go directly to the next generation
     F1[0]=F0[0]
