@@ -12,10 +12,40 @@ N_chains=2**L_chromosome
 crossover_point=int(L_chromosome/2)
 #Cantidad de agua que se busca tener en un garrafón
 T = 4
+#Capacidad de cada garrafón
+G1 = 5
+G2 = 3
 
-def hacerAccion(instruccion: int, valor: Tuple[int, int]):
+def hacerAccion(instruccion: int, garrafones: Tuple[int, int]) -> Tuple[int, int]:
     """Recibe un número el cual es un tipo de instrucción a realizar sobre un valor(Tupla)"""
-
+    global G1, G2
+    if(instruccion == 0): #Llenar el primer garrafón
+        garrafones[0] = G1
+    elif(instruccion == 1): #LLenar el garrafón 2
+        garrafones[1] = G2
+    elif(instruccion == 2): #Vaciar el garrafón 2
+        garrafones[1] = 0
+    elif(instruccion == 3): #Vaciar el garrafón 1
+        garrafones[0] = 0
+    elif(instruccion == 4): #Vaciar el garrafón 2
+        garrafones[1] = 0
+    elif(instruccion == 5): #Pasar contenido de G2 a G1
+        aux = garrafones[0] + garrafones[1]
+        if aux>G1:
+            garrafones[0] = G1
+            garrafones[1] = G1 - aux
+        else:
+            garrafones[0] = aux
+            garrafones[1] = 0
+    elif(instruccion == 6): #Pasar contenido de G1 a G2
+        aux = garrafones[0] + garrafones[1]
+        if aux>G2:
+            garrafones[1] = G2
+            garrafones[0] = G2 - aux
+        else:
+            garrafones[1] = aux
+            garrafones[0] = 0
+    return garrafones
 
 def random_chromosome():
     chromosome=[]
