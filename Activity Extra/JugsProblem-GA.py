@@ -1,11 +1,15 @@
 #!Python3
-"""Script de un Algoritmo genético que resuelve el problema de los garrafones de agua"""
+"""Script de un Algoritmo genético que resuelve el problema de los garrafones de agua
+Cada gen del cromosoma es un operación
+El resultado final se expresa en el primer garrafón"""
 
 import math
 import random
 import functools
 import numpy as np
 from typing import List, Tuple
+from random import randrange
+
 L_chromosome=9 
 N_chains=2**L_chromosome
 #Lower and upper limits of search space
@@ -48,13 +52,10 @@ def hacerAccion(instruccion: int, garrafones: Tuple[int, int]) -> Tuple[int, int
     return garrafones
 
 def random_chromosome():
+    """Genera los cromosomas de forma aleatoria"""
     chromosome=[]
     for i in range(0,L_chromosome):
-        if random.random()<0.1:
-            chromosome.append(0)
-        else:
-            chromosome.append(1)
-
+        chromosome.append(randrange(7))
     return chromosome
 
 #Number of chromosomes
@@ -65,17 +66,20 @@ prob_m=0.75 #0 ->.25
 F0=[]
 fitness_values=[]
 
+#Generación de los cromosomas
 for i in range(0,N_chromosomes):
     F0.append(random_chromosome())
     fitness_values.append(0)
 
 #binary codification
 def decode_chromosome(chromosome: List[int]) -> float:
-    """Convierte una cadena binaria en un entero"""
+    """A partir de un cromosoma, genera todas las instrucciones que tiene
+    y regresa el valor final de primer garrafón"""
     #global L_chromosome,N_chains,a,b
-    chromosome = [str(num) for num in chromosome]
-    chromosome = ''.join(chromosome)
-    return int(chromosome, 2)
+    garrafones = (0,0)
+    for i in chromosome:
+        garrafones = hacerAccion(i, garrafones)
+    return garrafones[0]
 
 
 def total(c: List[int])->int:
