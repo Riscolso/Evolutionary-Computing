@@ -3,6 +3,7 @@
 Cada gen del cromosoma es un operación
 El resultado final se expresa en el primer garrafón
 TODO: Agregar simbología
+TODO: Longitud variable
 """
 
 import math
@@ -21,6 +22,11 @@ T = 4
 #Capacidad de cada garrafón
 G1 = 5
 G2 = 3
+
+#Number of chromosomes
+N_chromosomes=20
+#probability of mutation
+prob_m=0.75 #0 ->.25
 
 def hacerAccion(instruccion: int, garrafones: Tuple[int, int], mostrarPasos:bool = False) -> Tuple[int, int]:
     """Recibe un número el cual es un tipo de instrucción a realizar sobre un valor(Tupla)"""
@@ -65,10 +71,6 @@ def random_chromosome():
         chromosome.append(randrange(6))
     return chromosome
 
-#Number of chromosomes
-N_chromosomes=20
-#probability of mutation
-prob_m=0.75 #0 ->.25
 
 F0=[]
 fitness_values=[]
@@ -90,7 +92,7 @@ def decodificarCromosoma(chromosome: List[int]) -> float:
 
 def f(c: List[int]) -> int:
     """Función de ajuste, determinar qué tan apto es un cromosoma"""
-    global T
+    global T 
     return abs(decodificarCromosoma(c) - T)
 
 
@@ -151,6 +153,8 @@ F1=F0[:]
 
 
 def nextgeneration():
+    print(F0)
+    print(fitness_values)
     F0.sort(key=functools.cmp_to_key(compare_chromosomes)) 
     global T
     #print('Cromosoma ', F0[0])
@@ -163,8 +167,8 @@ def nextgeneration():
     print('Cantidad Final de agua en el garrafón 1:', decodificarCromosoma(F0[0]))
 
     #elitism, the two best chromosomes go directly to the next generation
-    F1[0]=F0[0]
-    F1[1]=F0[1]
+    #F1[0]=F0[0]
+    #F1[1]=F0[1]
     for i in range(0,int((N_chromosomes-2)/2)):
         roulette=create_wheel()
         #Two parents are selected
@@ -177,9 +181,11 @@ def nextgeneration():
         o2.extend(F0[p1][crossover_point:L_chromosome])
         #Each descendant is mutated with probability prob_m
         if random.random() < prob_m:
-            o1[int(round(random.random()*(L_chromosome-1)))]^=1
+            o1[randrange(L_chromosome)] = randrange(6)
+            #o1[int(round(random.random()*(L_chromosome-1)))]^=1
         if random.random() < prob_m:
-            o2[int(round(random.random()*(L_chromosome-1)))]^=1
+            o2[randrange(L_chromosome)] = randrange(6)
+            #o2[int(round(random.random()*(L_chromosome-1)))]^=1
         #The descendants are added to F1
         F1[2+2*i]=o1
         F1[3+2*i]=o2
@@ -187,15 +193,15 @@ def nextgeneration():
 
     #The new generation replaces the old one
     F0[:]=F1[:]
+if __name__ == "__main__":
+    F0.sort(key=functools.cmp_to_key(compare_chromosomes))
+    evaluate_chromosomes()
+    print("\t\tProblema de los garrafones por GA" )
+    print('Cantidad de litros que se quieren en el garrafón 1: ', T, '\n')
 
-F0.sort(key=functools.cmp_to_key(compare_chromosomes))
-evaluate_chromosomes()
-print("\t\tProblema de los garrafones por GA" )
-print('Cantidad de litros que se quieren en el garrafón 1: ', T, '\n')
-
-while(True):
-    nextgeneration()
-    print('Otro? s/n')
-    if input() == 'n':
-        exit()
+    while(True):
+        nextgeneration()
+        print('Otro? s/n')
+        if input() == 'n':
+            exit()
 
