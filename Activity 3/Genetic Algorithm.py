@@ -6,7 +6,7 @@ import random
 import functools
 import numpy as np
 #Chromosomes are 4 bits long
-L_chromosome=10  #4
+L_chromosome=16  #4
 N_chains=2**L_chromosome
 #Lower and upper limits of search space
 a=-20
@@ -29,7 +29,7 @@ def random_chromosome():
 #Number of chromosomes
 N_chromosomes=20
 #probability of mutation
-prob_m=0.75 #0 ->.25
+prob_m=0.95 #0 ->.25
 
 F0=[]
 fitness_values=[]
@@ -52,10 +52,10 @@ def decode_chromosome(chromosome):
 def f(x):
     return 0.05*x*x-4*math.cos(x)
 
-#def f(x):
-#    """Rastrigin Function"""
-#    d = 1 #dimension
-#    return 10*d + (x**2 - 10 * math.cos( 2 * math.pi * x ))
+# def f(x):
+#     """Rastrigin Function"""
+#     d = 1 #dimension
+#     return 10*d + (x**2 - 10 * math.cos( 2 * math.pi * x ))
 
 
 
@@ -126,7 +126,7 @@ F1=F0[:]
 
 def nextgeneration():
     w.delete(ALL)
-    F0.sort(key=functools.cmp_to_key(compare_chromosomes)) #Ordenar cromosomas por el más valioso
+    F0.sort(key=functools.cmp_to_key(compare_chromosomes))
     print( "Best solution so far:" )
     print( "f("+str(decode_chromosome(F0[0]))+")= "+
            str(f(decode_chromosome(F0[0]))) )
@@ -210,11 +210,7 @@ def numeric_compare(x, y):
 
 graph_f()
 graph_population(F0,w,s,s,xo,yo,'red')
-print('Esto', F0)
-print('Valor: ', decode_chromosome(F0[0]))
 F0.sort(key=functools.cmp_to_key(compare_chromosomes))
-print('Aquello', F0)
-print('Valor: ', decode_chromosome(F0[0]))
 evaluate_chromosomes()
 
 
