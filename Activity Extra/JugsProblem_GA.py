@@ -167,8 +167,8 @@ def nextgeneration():
     print('Cantidad Final de agua en el garrafón 1:', decodificarCromosoma(F0[0]))
 
     #elitism, the two best chromosomes go directly to the next generation
-    #F1[0]=F0[0]
-    #F1[1]=F0[1]
+    F1[0]=F0[0]
+    F1[1]=F0[1]
     for i in range(0,int((N_chromosomes-2)/2)):
         roulette=create_wheel()
         #Two parents are selected
