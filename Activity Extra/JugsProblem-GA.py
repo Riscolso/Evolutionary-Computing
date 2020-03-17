@@ -1,7 +1,9 @@
 #!Python3
 """Script de un Algoritmo genético que resuelve el problema de los garrafones de agua
 Cada gen del cromosoma es un operación
-El resultado final se expresa en el primer garrafón"""
+El resultado final se expresa en el primer garrafón
+TODO: Agregar simbología
+"""
 
 import math
 import random
@@ -10,7 +12,7 @@ import numpy as np
 from typing import List, Tuple
 from random import randrange
 
-L_chromosome=9 
+L_chromosome=8 
 N_chains=2**L_chromosome
 #Lower and upper limits of search space
 crossover_point=int(L_chromosome/2)
@@ -20,46 +22,51 @@ T = 4
 G1 = 5
 G2 = 3
 
-def hacerAccion(instruccion: int, garrafones: Tuple[int, int]) -> Tuple[int, int]:
+def hacerAccion(instruccion: int, garrafones: Tuple[int, int], mostrarPasos:bool = False) -> Tuple[int, int]:
     """Recibe un número el cual es un tipo de instrucción a realizar sobre un valor(Tupla)"""
     global G1, G2
+    cadaux = ''
+    #if mostrarPasos:
+    #        print('Entra: ', garrafones)
     if(instruccion == 0): #Llenar el primer garrafón
-        garrafones[0] = G1
+        garrafones = (G1, garrafones[1])
+        cadaux = '-LLenar G1 ' + str(garrafones)
     elif(instruccion == 1): #LLenar el garrafón 2
-        garrafones[1] = G2
+        garrafones = (garrafones[0], G2)
+        cadaux = '-Llenar G2 ' + str(garrafones)
     elif(instruccion == 2): #Vaciar el garrafón 2
-        garrafones[1] = 0
+        garrafones = (garrafones[0], 0)
+        cadaux = '-Vaciar G2 ' + str(garrafones)
     elif(instruccion == 3): #Vaciar el garrafón 1
-        garrafones[0] = 0
-    elif(instruccion == 4): #Vaciar el garrafón 2
-        garrafones[1] = 0
-    elif(instruccion == 5): #Pasar contenido de G2 a G1
+        garrafones = (0, garrafones[1])
+        cadaux = '-Vaciar G1 ' + str(garrafones)
+    elif(instruccion == 4): #Pasar contenido de G2 a G1
         aux = garrafones[0] + garrafones[1]
         if aux>G1:
-            garrafones[0] = G1
-            garrafones[1] = G1 - aux
+            garrafones = (G1, aux - G1)
         else:
-            garrafones[0] = aux
-            garrafones[1] = 0
-    elif(instruccion == 6): #Pasar contenido de G1 a G2
+            garrafones = (aux, 0)
+        cadaux = '-G2 -> G1 ' + str(garrafones)
+    elif(instruccion == 5): #Pasar contenido de G1 a G2
         aux = garrafones[0] + garrafones[1]
         if aux>G2:
-            garrafones[1] = G2
-            garrafones[0] = G2 - aux
+            garrafones = (aux - G2, G2)
         else:
-            garrafones[1] = aux
-            garrafones[0] = 0
+            garrafones = (0, aux)
+        cadaux = '-G1 -> G2 '+ str(garrafones)
+    if mostrarPasos:
+        print(cadaux)
     return garrafones
 
 def random_chromosome():
     """Genera los cromosomas de forma aleatoria"""
     chromosome=[]
     for i in range(0,L_chromosome):
-        chromosome.append(randrange(7))
+        chromosome.append(randrange(6))
     return chromosome
 
 #Number of chromosomes
-N_chromosomes=10
+N_chromosomes=20
 #probability of mutation
 prob_m=0.75 #0 ->.25
 
@@ -72,31 +79,19 @@ for i in range(0,N_chromosomes):
     fitness_values.append(0)
 
 #binary codification
-def decode_chromosome(chromosome: List[int]) -> float:
+def decodificarCromosoma(chromosome: List[int]) -> float:
     """A partir de un cromosoma, genera todas las instrucciones que tiene
     y regresa el valor final de primer garrafón"""
     #global L_chromosome,N_chains,a,b
-    garrafones = (0,0)
+    g = (0,0)
     for i in chromosome:
-        garrafones = hacerAccion(i, garrafones)
-    return garrafones[0]
+        g = hacerAccion(i, g)
+    return g[0]
 
-
-def total(c: List[int])->int:
-    """Convierte un cromosoma(cadena de binarios)
-    en el total de monedas"""
-    #Cantidad de monedas de valor 5, de 2 y de 1
-    return (5*decode_chromosome(c[:3]))+(2*decode_chromosome(c[3:6]))+decode_chromosome(c[6:9])
-
-
-
-def f(c: List[int]) -> float:
+def f(c: List[int]) -> int:
     """Función de ajuste, determinar qué tan apto es un cromosoma"""
     global T
-    #Diferencia en la cantidad de monedas y el total + cantidad de monedas
-    return abs(T-total(c)) + decode_chromosome(c[:3])+decode_chromosome(c[3:6])+decode_chromosome(c[6:9])
-
-
+    return abs(decodificarCromosoma(c) - T)
 
 
 def evaluate_chromosomes():
@@ -107,7 +102,7 @@ def evaluate_chromosomes():
         fitness_values[p]=f(F0[p])
 
 
-def compare_chromosomes(chromosome1,chromosome2):
+def compare_chromosomes(chromosome1: List[int],chromosome2: List[int]) -> int:
     #vc1=decode_chromosome(chromosome1)
     #vc2=decode_chromosome(chromosome2)
     fvc1=f(chromosome1)
@@ -153,21 +148,19 @@ def create_wheel():
 
 F1=F0[:]
 
+
+
 def nextgeneration():
     F0.sort(key=functools.cmp_to_key(compare_chromosomes)) 
     global T
     #print('Cromosoma ', F0[0])
-    print("\t\tMejor solución" )
-    print('Cambio requerido: ', T)
-    print('Cambio dado: ', str(total(F0[0])))
-    x5 = decode_chromosome(F0[0][:3])
-    x2 = decode_chromosome(F0[0][3:6])
-    x = decode_chromosome(F0[0][6:9])
-    #str(f(F0[0]))
-    print('Total de monedas: ',x5+x2+x)
-    print('Monedas de 5: ', x5)
-    print('Monedas de 2: ', x2)
-    print('Monedas de 1: ', x)
+    print('Mejor solución hasta ahora: ')
+    print('Cromosoma: ', F0[0])
+    g = (0,0)
+    for i in F0[0]:
+        g = hacerAccion(i, g, True)
+    print('Valor Final de cromosoma:', f(F0[0]))
+    print('Cantidad Final de agua en el garrafón 1:', decodificarCromosoma(F0[0]))
 
     #elitism, the two best chromosomes go directly to the next generation
     F1[0]=F0[0]
@@ -197,6 +190,8 @@ def nextgeneration():
 
 F0.sort(key=functools.cmp_to_key(compare_chromosomes))
 evaluate_chromosomes()
+print("\t\tProblema de los garrafones por GA" )
+print('Cantidad de litros que se quieren en el garrafón 1: ', T, '\n')
 
 while(True):
     nextgeneration()
