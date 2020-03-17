@@ -7,11 +7,11 @@ import functools
 import numpy as np
 from typing import List
 #Chromosomes bits long
-L_chromosome=20  #4
-N_chains=2**L_chromosome
+L_chromosome=30  #4
+N_chains=2**(L_chromosome/2) #Ya que se está usando un solo cromosoma para X y Y
 #Lower and upper limits of search space
-a=-20
-b=20
+a=-40
+b=40
 crossover_point=int(L_chromosome/2)
 
 
@@ -30,7 +30,7 @@ def random_chromosome():
 #Number of chromosomes
 N_chromosomes=10
 #probability of mutation
-prob_m=0.75 #0 ->.25
+prob_m=0.50 #0 ->.25
 
 F0=[]
 fitness_values=[]
@@ -67,7 +67,7 @@ def f(chromosome: List[float]):
     for c in chromosome:
         firstSum += c**2.0
         secondSum += math.cos(2.0*math.pi*c)
-    n = float(len(chromosome))
+    n = float(2)
     return -20.0*math.exp(-0.2*math.sqrt(firstSum/n)) - math.exp(secondSum/n) + 20 + math.e
 
 
@@ -173,7 +173,8 @@ F0.sort(key=functools.cmp_to_key(compare_chromosomes))
 evaluate_chromosomes()
 
 while(True):
-    nextgeneration()
+    for i in range(30):
+        nextgeneration()
     print('Otro? s/n')
     if input() == 'n':
         exit()
