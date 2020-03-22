@@ -13,10 +13,15 @@ import numpy as np
 from typing import List, Tuple
 from random import randrange
 
-L_chromosome=8 
-N_chains=2**L_chromosome
+#Tamaño máximo con el que inician los cromosomas
+L_INI=6
+#Cada cromosoma va a a tener su longitud variable
+L_chromosomes = []
+#N_chains=2**L_chromosome
 #Lower and upper limits of search space
-crossover_point=int(L_chromosome/2)
+
+#crossover_point=int(L_chromosome/2)
+
 #Cantidad de agua que se busca tener en un garrafón
 T = 4
 #Capacidad de cada garrafón
@@ -27,6 +32,8 @@ G2 = 3
 N_chromosomes=20
 #probability of mutation
 prob_m=0.75 #0 ->.25
+#Probabilidad de Insercción - Agranda el cromosoma
+prob_i=0.50
 
 def hacerAccion(instruccion: int, garrafones: Tuple[int, int], mostrarPasos:bool = False) -> Tuple[int, int]:
     """Recibe un número el cual es un tipo de instrucción a realizar sobre un valor(Tupla)"""
@@ -66,8 +73,10 @@ def hacerAccion(instruccion: int, garrafones: Tuple[int, int], mostrarPasos:bool
 
 def random_chromosome():
     """Genera los cromosomas de forma aleatoria"""
+    global L_INI
     chromosome=[]
-    for i in range(0,L_chromosome):
+    #Evitar el tamaño 0
+    for _ in range(0, randrange(1,L_INI)):
         chromosome.append(randrange(6))
     return chromosome
 
@@ -76,7 +85,7 @@ F0=[]
 fitness_values=[]
 
 #Generación de los cromosomas
-for i in range(0,N_chromosomes):
+for _ in range(0,N_chromosomes):
     F0.append(random_chromosome())
     fitness_values.append(0)
 
@@ -142,7 +151,7 @@ def create_wheel():
 
     for f in fraction:
         Np=int(f*Lwheel)
-        for i in range(Np):
+        for _ in range(Np):
             wheel.append(pc)
         pc+=1
 
@@ -152,40 +161,57 @@ F1=F0[:]
 
 
 
-def nextgeneration():
-    print(F0)
-    print(fitness_values)
+def nextgeneration(imprimir = False):
+    global prob_m, prob_i, T
     F0.sort(key=functools.cmp_to_key(compare_chromosomes)) 
-    global T
     #print('Cromosoma ', F0[0])
-    print('Mejor solución hasta ahora: ')
-    print('Cromosoma: ', F0[0])
-    g = (0,0)
-    for i in F0[0]:
-        g = hacerAccion(i, g, True)
-    print('Valor Final de cromosoma:', f(F0[0]))
-    print('Cantidad Final de agua en el garrafón 1:', decodificarCromosoma(F0[0]))
+    if imprimir:
+        #print(F0)
+        #print(fitness_values)
+        print('Mejor solución hasta ahora: ')
+        print('Cromosoma: ', F0[0])
+        g = (0,0)
+        for i in F0[0]:
+            g = hacerAccion(i, g, True)
+        print('Valor Final de cromosoma:', f(F0[0]))
+        print('Cantidad Final de agua en el garrafón 1:', decodificarCromosoma(F0[0]))
 
     #elitism, the two best chromosomes go directly to the next generation
     F1[0]=F0[0]
     F1[1]=F0[1]
+    #Forzar la solución para ver si funca el algoritmo xD
+    #F0[4] = [0,5,2,5,0,5]
     for i in range(0,int((N_chromosomes-2)/2)):
         roulette=create_wheel()
         #Two parents are selected
         p1=random.choice(roulette)
         p2=random.choice(roulette)
         #Two descendants are generated
-        o1=F0[p1][0:crossover_point]
-        o1.extend(F0[p2][crossover_point:L_chromosome])
-        o2=F0[p2][0:crossover_point]
-        o2.extend(F0[p1][crossover_point:L_chromosome])
+        #Juntar dos cromosomas partido en uno
+        crossover_point = len(F0[p1])//2
+        o1=F0[p1][:crossover_point]
+        crossover_point = len(F0[p2])//2
+        o1.extend(F0[p2][crossover_point:])
+
+        crossover_point = len(F0[p2])//2
+        o2=F0[p2][:crossover_point]
+        crossover_point = len(F0[p1])//2
+        o2.extend(F0[p1][crossover_point:])
+
         #Each descendant is mutated with probability prob_m
         if random.random() < prob_m:
-            o1[randrange(L_chromosome)] = randrange(6)
+            #print('Esto: ', len(o1))
+            o1[randrange(len(o1))] = randrange(6)
             #o1[int(round(random.random()*(L_chromosome-1)))]^=1
         if random.random() < prob_m:
-            o2[randrange(L_chromosome)] = randrange(6)
+            #print('Esto 2: ', o2)
+            o2[randrange(len(o2))] = randrange(6)
             #o2[int(round(random.random()*(L_chromosome-1)))]^=1
+        #Probabilidad de inserción -Agranda el Cromosoma
+        if random.random() < prob_i:
+            o1.append(randrange(6))
+        if random.random() < prob_i:
+            o2.append(randrange(6))
         #The descendants are added to F1
         F1[2+2*i]=o1
         F1[3+2*i]=o2
@@ -199,9 +225,11 @@ if __name__ == "__main__":
     print("\t\tProblema de los garrafones por GA" )
     print('Cantidad de litros que se quieren en el garrafón 1: ', T, '\n')
 
-    while(True):
-        nextgeneration()
-        print('Otro? s/n')
-        if input() == 'n':
-            exit()
+    for i in range(300):
+        nextgeneration(False)
+        if i == 299:
+            nextgeneration(True)
+        #print('Otro? s/n')
+        #if input() == 'n':
+        #    exit()
 
