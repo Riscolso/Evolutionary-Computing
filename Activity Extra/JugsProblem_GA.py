@@ -33,7 +33,7 @@ N_chromosomes=20
 #probability of mutation
 prob_m=0.75 #0 ->.25
 #Probabilidad de Insercción - Agranda el cromosoma
-prob_i=0.50
+prob_i=0.25
 
 def hacerAccion(instruccion: int, garrafones: Tuple[int, int], mostrarPasos:bool = False) -> Tuple[int, int]:
     """Recibe un número el cual es un tipo de instrucción a realizar sobre un valor(Tupla)"""
@@ -96,7 +96,7 @@ def decodificarCromosoma(chromosome: List[int]) -> float:
     #global L_chromosome,N_chains,a,b
     g = (0,0)
     for i in chromosome:
-        g = hacerAccion(i, g)
+        g = hacerAccion(i, g, False)
     return g[0]
 
 def f(c: List[int]) -> int:
@@ -177,6 +177,8 @@ def nextgeneration(imprimir = False):
         print('Cantidad Final de agua en el garrafón 1:', decodificarCromosoma(F0[0]))
 
     #elitism, the two best chromosomes go directly to the next generation
+
+    #OJO MANTENER VIGILADO, QUE LUEGO POR ESTO NO FUNCIONA XD
     F1[0]=F0[0]
     F1[1]=F0[1]
     #Forzar la solución para ver si funca el algoritmo xD
@@ -225,9 +227,9 @@ if __name__ == "__main__":
     print("\t\tProblema de los garrafones por GA" )
     print('Cantidad de litros que se quieren en el garrafón 1: ', T, '\n')
 
-    for i in range(300):
+    for i in range(2000):
         nextgeneration(False)
-        if i == 299:
+        if i == 1999:
             nextgeneration(True)
         #print('Otro? s/n')
         #if input() == 'n':
