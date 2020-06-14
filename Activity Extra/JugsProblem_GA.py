@@ -31,9 +31,9 @@ G2 = 3
 #Number of chromosomes
 N_chromosomes=20
 #probability of mutation
-prob_m=0.75 #0 ->.25
+prob_m=0.85 #0 ->.25
 #Probabilidad de Insercción - Agranda el cromosoma
-prob_i=0.25
+prob_i=0.85
 
 def hacerAccion(instruccion: int, garrafones: Tuple[int, int], mostrarPasos:bool = False) -> Tuple[int, int]:
     """Recibe un número el cual es un tipo de instrucción a realizar sobre un valor(Tupla)"""
